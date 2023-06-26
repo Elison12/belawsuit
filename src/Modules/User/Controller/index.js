@@ -1,13 +1,16 @@
 const User = require('../Model/index');
-const Procurador = require('../Model/procurador');
-const Acessor = require('../Model/acessor');
+const Entrada = require('../Model/entradamodel');
+const Saida = require('../Model/saidamodel');
+const Arquivados = require('../Model/arquivadosmodel');
+
 
 async function create(req, res, next) {
-    const { username, email, password } = req.body;
+    const { username, email, password, name } = req.body;
 
     const validUsername = await User.find({ username: username });
 
-    if (validUsername.lenght == 0) {
+    if (validUsername.length == 0) {
+        
     } else {
         return res
             .status(400)
@@ -23,7 +26,8 @@ async function create(req, res, next) {
     const user = await User.create({
         username,
         email,
-        password
+        password,
+        name
     });
 
     user.password = null;
@@ -70,91 +74,140 @@ async function remove(req, res) {
     }
 }
 
-async function isAcessor(req, res) {
-    try {
-        const _id = req.body;
-        const cpf = req.body.cpf;
-        const email = req.body.email;
-        const telefone = req.body.telefone;
+async function createArchiveEntrada(req, res) {
+    try{
+        const _id = req.userId;
+        const {titulo} = req.body;
+        const user = await User.findById({ _id });
 
-        var acessor = await Acessor.findOne({ cpf: cpf })
-
-        if (!acessor) {
-            acessor = await Acessor.create({
-                cpf,
-                email,
-                telefone
-            })
-        } else {
+        if(!user){
             return res
-                .status(409)
-                .json({ message: 'Esse acessor ja esta cadastrado!' });
+            .status(404)
+            .json({ message: 'Esse usuário não foi encontrado!' });
         }
 
+        const entrada = await Entrada.create({
+            titulo
+        });
 
-        const user = await User.findById(_id);
+        return res.status(200).send({message: 'processo criado'});
 
-        if (!user) {
-            return res
-                .status(404)
-                .json({ message: 'Esse usuário não foi encontrado!' });
-        }
-
-        user.acessor = acessor._id
-
-        await user.save();
-        await acessor.save();
-
-        return res.status(200).json({ message: 'Usuário atualizado' });
-    } catch ({ message }) {
-        return res.status(500).json({ message });
+    } catch ({message}) {
+        return res.status(500).json({message});
     }
 }
 
-async function isProcurador(req, res) {
-    try {
-        const _id = req.body;
-        const cpf = req.body.cpf;
-        const email = req.body.email;
-        const telefone = req.body.telefone;
+async function deleteArchiveEntrada(req, res) {
+    try{
+        const _id = req.userId;
+        const {entradaId} = req.params;
+        const user = await User.findById({ _id });
 
-        var procurador = await Procurador.findOne({ cpf: cpf })
-
-        if (!procurador) {
-            procurador = await Procurador.create({
-                cpf,
-                email,
-                telefone
-            })
-        } else {
+        if(!user){
             return res
-                .status(409)
-                .json({ message: 'Esse procurador ja esta cadastrado!' });
+            .status(404)
+            .json({ message: 'Esse usuário não foi encontrado!' });
         }
 
-
-        const user = await User.findById(_id);
-
-        if (!user) {
+        if(user.isProcurador == false){
             return res
-                .status(404)
-                .json({ message: 'Esse usuário não foi encontrado!' });
+            .status(403)
+            .json({ message: 'Esse usuário não tem permissão para realizar tal ação' });
         }
 
-        user.procurador = procurador._id
+        const entrada = await Entrada.findByIdAndDelete({
+            entradaId
+        });
 
-        await user.save();
-        await acessor.save();
+        return res.status(200).send({message: 'processo deletado'});
 
-        return res.status(200).json({ message: 'Usuário atualizado' });
-    } catch ({ message }) {
-        return res.status(500).json({ message });
+    } catch ({message}) {
+        return res.status(500).json({message});
     }
 }
+
+
+async function updateArchiveEntrada(req, res) {
+    try{
+        const _id = req.userId;
+        const {entradaId} = req.params;
+        const {titulo} = req.body;
+        const user = await User.findById({ _id });
+
+        if(!user){
+            return res
+            .status(404)
+            .json({ message: 'Esse usuário não foi encontrado!' });
+        }
+
+        if(user.isProcurador == false){
+            return res
+            .status(403)
+            .json({ message: 'Esse usuário não tem permissão para realizar tal ação' });
+        }
+
+        const entrada = await Entrada.findByIdAndUpdate(
+            entradaId,
+            {
+                $set: {titulo:titulo}
+            },
+        );
+
+        return res.status(200).send({message: 'processo atualizado'});
+
+    } catch ({message}) {
+        return res.status(500).json({message});
+    }
+}
+
+
+async function transferprocesso(req, res) {
+    try{
+        const _idEmissor = req.userId;
+
+        const {entradaId, _idReceptor} = req.body;
+        const destino = await User.findById({ _idReceptor });
+        const origem = await User.findById({_idEmissor});
+
+        if(!destino){
+            return res
+            .status(404)
+            .json({ message: 'Esse usuário não foi encontrado!' });
+        }
+        if(!origem){
+            return res
+            .status(404)
+            .json({ message: 'Esse usuário não foi encontrado!' });
+        }
+
+        const validEntrada =  origem.entrada.find(el => el._id == entradaId);
+        if (validEntrada == undefined){
+            return res
+            .status(404)
+            .json({ message: 'Essa entrada não foi encontrada!' });
+        }
+
+        await origem.entrada.pull(entradaId)
+        await origem.saida.push(entradaId)
+
+        await destino.entrada.push(entradaId);
+        
+        await origem.save();
+        await destino.save();
+        return res.status(200).send({message: 'processo enviado'});
+
+    } catch ({message}) {
+        return res.status(500).json({message});
+    }
+}
+
 
 module.exports = {
+    createArchiveEntrada,
+    transferprocesso,
+    deleteArchiveEntrada,
+    updateArchiveEntrada,
     create,
     readOne,
-    isAcessor,
-    isProcurador
+    remove,
 };

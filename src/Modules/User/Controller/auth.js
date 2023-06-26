@@ -4,14 +4,14 @@ const User = require('../Model');
 
 async function authenticate(req, res) {
   try {
-    
+
     const username = req.body.username;
     const plainTextPassword = req.body.password;
     var user;
 
     user = await User.findOne({ username: username }).select('+password');
 
-    if(!user){
+    if (!user) {
       user = await User.findOne({ email: username }).select('+password');
     }
 
@@ -19,30 +19,30 @@ async function authenticate(req, res) {
       return res.status(400).json({ message: 'Email ou usuario não cadastrado' });
     }
 
-    if(user.verified == true){
+    if (user.verified == true) {
 
-    async function match(plainTextPassword, hashedPassword) {
-      if (!plainTextPassword || !hashedPassword) {
-        return false;
+      async function match(plainTextPassword, hashedPassword) {
+        if (!plainTextPassword || !hashedPassword) {
+          return false;
+        }
+
+        return bcrypt.compare(plainTextPassword, hashedPassword);
       }
 
-      return bcrypt.compare(plainTextPassword, hashedPassword);
+      const passwordMatch = await match(plainTextPassword, user?.password);
+
+      if (!user || !passwordMatch) {
+        return res.status(400).json({ message: 'Email ou senha incorretos' });
+      }
+
+      user.password = undefined;
+      const id = user._id;
+      const token = jwt.sign({ id }, process.env.SECRET, { expiresIn: '90d' });
+
+      return res.status(200).json({ token, _id: id, auth: true });
+    } else {
+      return res.status(403).json({ message: 'Email não verificado' });
     }
-
-    const passwordMatch = await match(plainTextPassword, user?.password);
-
-    if (!user || !passwordMatch) {
-      return res.status(400).json({ message: 'Email ou senha incorretos' });
-    }
-
-    user.password = undefined;
-    const id = user._id;
-    const token = jwt.sign({ id }, process.env.SECRET, { expiresIn: '90d' });
-
-    return res.status(200).json({ token, _id: id, auth: true });
-  }else{
-    return res.status(403).json({ message: 'Email não verificado' });
-  }
   } catch ({ message }) {
     return res.status(500).json({ message });
   }

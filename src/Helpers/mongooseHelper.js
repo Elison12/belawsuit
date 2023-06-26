@@ -1,5 +1,5 @@
 require('dotenv').config()
-const mongoose = require('mogoose');
+const mongoose = require('mongoose');
 const database = require('../Database');
 
 function connectDataBase() {

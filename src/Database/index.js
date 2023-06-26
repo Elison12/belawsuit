@@ -1,8 +1,8 @@
 module.exports = {
     db: {
-        connection: process.env.REMOTE_DB,
+        connection: "mongodb+srv://epassos352:JaSRL2bjQwi6C9XK@cluster0.ljrq1qz.mongodb.net/?retryWrites=true&w=majority",
     },
     app: {
-        port: process.env.PORT,
+        port: 3000,
     },
 };

@@ -1,18 +1,10 @@
-const mongooseHelpers = require('./Helpers/mongooseHelper');
+const app = require('./app')
+const connectToDB = require('./server')
 
-async function connectToDB() {
-  await mongooseHelpers
-    .connectDatabase()
-    .then(info => {
-      console.log(
-        `Database connected to ${info.host}:${info.port}/${info.name}`,
-      );
-    })
-    .catch(error => {
-      console.log(error);
-      console.error('Unable to connect to database');
-      process.exit(1);
-    });
-}
+const port = 3000;
 
-module.exports = connectToDB;
+(async () => {
+  connectToDB();
+  await app.listen(port);
+  console.log(`Server started on port ${port}`);
+})();

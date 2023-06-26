@@ -1,10 +1,18 @@
-const app = require('./app');
-const connectToDB = require('./server');
+const mongooseHelpers = require('./src/Helpers/mongooseHelper');
 
-const port = process.env.PORT;
+async function connectToDB() {
+  await mongooseHelpers
+    .connectDataBase()
+    .then(info => {
+      console.log(
+        `Banco de dados conectado`,
+      );
+    })
+    .catch(error => {
+      console.log(error);
+      console.error('Nao é possivel conectar a banco de dados');
+      process.exit(1);
+    });
+}
 
-(async () => {
-    connectToDB();
-    await app.listen(port);
-    console.log(`Server started on port ${port}`);
-  })();
+module.exports = connectToDB;

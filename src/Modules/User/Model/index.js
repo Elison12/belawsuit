@@ -8,25 +8,40 @@ const UserSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    name: {
+      type: String,
+      required: true
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true
+    },
     password: {
       type: String,
       required: true,
       min: 8,
       max: 32
     },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
+    isProcurador: {
+      type: Boolean,
+      default: false
     },
-    acessor: {
+    entrada: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'Entrada',
+      }
+    ],
+    saida: [{
       type: mongoose.Schema.ObjectId,
-      ref: 'Acessor'
-    },
-    procurador:{
+      ref: 'Saida',
+    }],
+    arquivados: [{
       type: mongoose.Schema.ObjectId,
-      ref: 'Procurador'
-    }
+      ref: 'Arquivados',
+    }]
+
   },
   {
     timestamps: {
