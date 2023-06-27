@@ -14,6 +14,7 @@ routes
                 username: Joi.string().required(),
                 email: Joi.string().required().email(),
                 password: Joi.string().required(),
+                isProcurador: Joi.boolean().required()
             }),
         }),
         EmailInUse.emailInUse,

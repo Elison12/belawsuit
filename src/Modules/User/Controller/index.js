@@ -5,7 +5,7 @@ const Arquivados = require('../Model/arquivadosmodel');
 
 
 async function create(req, res, next) {
-    const { username, email, password, name } = req.body;
+    const { username, email, password, name, isProcurador } = req.body;
 
     const validUsername = await User.find({ username: username });
 
@@ -27,7 +27,8 @@ async function create(req, res, next) {
         username,
         email,
         password,
-        name
+        name,
+        isProcurador
     });
 
     user.password = null;

@@ -19,8 +19,7 @@ async function authenticate(req, res) {
       return res.status(400).json({ message: 'Email ou usuario não cadastrado' });
     }
 
-    if (user.verified == true) {
-
+     
       async function match(plainTextPassword, hashedPassword) {
         if (!plainTextPassword || !hashedPassword) {
           return false;
@@ -37,13 +36,12 @@ async function authenticate(req, res) {
 
       user.password = undefined;
       const id = user._id;
-      const token = jwt.sign({ id }, process.env.SECRET, { expiresIn: '90d' });
+      const token = jwt.sign({ id }, "process.env.SECRET", { expiresIn: '90d' });
 
       return res.status(200).json({ token, _id: id, auth: true });
-    } else {
-      return res.status(403).json({ message: 'Email não verificado' });
-    }
-  } catch ({ message }) {
+    } 
+    
+   catch ({ message }) {
     return res.status(500).json({ message });
   }
 }
