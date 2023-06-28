@@ -41,5 +41,46 @@ routes.route('/user/:_id').get(
     Controller.readOne,
 );
 
+routes.route('/user/saidatoarquivado').put(
+    celebrate({
+        [Segments.BODY]: Joi.object().keys({
+            saidaId: Joi.string().required()
+        })
+    }),
+    UserAuth.verifyToken,
+    Controller.saidatoarquivado
+)
+
+routes.route('/user/entradatoarquivado').put(
+    celebrate({
+        [Segments.BODY]: Joi.object().keys({
+            entradaId: Joi.string().required()
+        })
+    }),
+    UserAuth.verifyToken,
+    Controller.entradatoarquivado
+)
+
+routes.route('/user/transferprocesso').put(
+    celebrate({
+        [Segments.BODY]: Joi.object().keys({
+            entradaId: Joi.string().required(),
+            _idReceptor: Joi.string().required()
+        })
+    }),
+    UserAuth.verifyToken,
+    Controller.transferprocesso
+)
+
+routes.route('/user/createprocesso').post(
+    celebrate({
+        [Segments.BODY]: Joi.object().keys({
+            titulo : Joi.string().required()
+        })
+    }),
+    UserAuth.verifyToken,
+    Controller.createArchiveEntrada
+)
+
 
 module.exports = routes;

@@ -38,7 +38,7 @@ async function create(req, res, next) {
 
 async function readOne(req, res) {
     try {
-        const { _id } = req.paramns;
+        const { _id } = req.params;
 
         const user = await User.findById({ _id }).select({
             password: 0,
@@ -90,7 +90,8 @@ async function createArchiveEntrada(req, res) {
         const entrada = await Entrada.create({
             titulo
         });
-
+        user.entrada.push(entrada._id)
+        await user.save()
         return res.status(200).send({message: 'processo criado'});
 
     } catch ({message}) {
@@ -165,7 +166,6 @@ async function updateArchiveEntrada(req, res) {
 async function transferprocesso(req, res) {
     try{
         const _idEmissor = req.userId;
-
         const {entradaId, _idReceptor} = req.body;
         const destino = await User.findById({ _idReceptor });
         const origem = await User.findById({_idEmissor});
@@ -202,8 +202,78 @@ async function transferprocesso(req, res) {
     }
 }
 
+async function entradatoarquivado(req, res) {
+    try{
+        const _idUser = req.userId;
+
+        const {entradaId} = req.body;
+        const user = await User.findById({ _idUser });
+
+
+        if(!user){
+            return res
+            .status(404)
+            .json({ message: 'Esse usuário não foi encontrado!' });
+        }
+
+        const validEntrada =  origem.entrada.find(el => el._id == entradaId);
+        if (validEntrada == undefined){
+            return res
+            .status(404)
+            .json({ message: 'Essa entrada não foi encontrada!' });
+        }
+
+        await user.entrada.pull(entradaId)
+        await user.arquivados.push(entradaId)
+
+        
+        await user.save();
+
+        return res.status(200).send({message: 'processo arquivado'});
+
+    } catch ({message}) {
+        return res.status(500).json({message});
+    }
+}
+
+async function saidatoarquivado(req, res) {
+    try{
+        const _idUser = req.userId;
+
+        const {saidaId} = req.body;
+        const user = await User.findById({ _idUser });
+
+
+        if(!user){
+            return res
+            .status(404)
+            .json({ message: 'Esse usuário não foi encontrado!' });
+        }
+
+        const validSaida =  origem.saida.find(el => el._id == saidaId);
+        if (validSaida == undefined){
+            return res
+            .status(404)
+            .json({ message: 'Essa saida não foi encontrada!' });
+        }
+
+        await user.saida.pull(saidaId)
+        await user.arquivados.push(saidaId)
+
+        
+        await user.save();
+
+        return res.status(200).send({message: 'processo arquivado'});
+
+    } catch ({message}) {
+        return res.status(500).json({message});
+    }
+}
+
 
 module.exports = {
+    saidatoarquivado,
+    entradatoarquivado,
     createArchiveEntrada,
     transferprocesso,
     deleteArchiveEntrada,

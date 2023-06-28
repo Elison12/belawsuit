@@ -36,7 +36,7 @@ async function authenticate(req, res) {
 
       user.password = undefined;
       const id = user._id;
-      const token = jwt.sign({ id }, "process.env.SECRET", { expiresIn: '90d' });
+      const token = jwt.sign({ id }, process.env.SECRET, { expiresIn: '90d' });
 
       return res.status(200).json({ token, _id: id, auth: true });
     } 
